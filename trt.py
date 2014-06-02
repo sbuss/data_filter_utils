@@ -2,6 +2,7 @@ import argparse
 import csv
 from itertools import groupby
 from os import makedirs
+import os
 
 import line_filters
 from reader import filter_file
@@ -15,11 +16,12 @@ trt_filename_pattern = r'trt.*\.csv'
 
 
 def summarize(dirname):
+    print("Summarizing %s" % dirname)
     fieldnames = [
         'trt_session', 'class',
         'response_time_avg', 'response_time_std_dev',
         'accuracy_avg', 'accuracy_std_dev']
-    outfile_name = "data/trt/summary.csv"
+    outfile_name = os.path.join(dirname, "summary.csv")
     writer = csv.DictWriter(open(outfile_name, 'w'), fieldnames)
     writer.writeheader()
 
@@ -73,6 +75,7 @@ def filter_all_trt(dirname):
         except Exception as e:
             print("Couldn't parse %s correctly." % infile_name)
             print(e)
+    return outdir
 
 
 if __name__ == "__main__":
@@ -81,4 +84,5 @@ if __name__ == "__main__":
         "data_dir",
         help="The directory which contains all of your data files.")
     args = parser.parse_args()
-    filter_all_trt(args.data_dir)
+    outdir = filter_all_trt(args.data_dir)
+    summarize(outdir)
