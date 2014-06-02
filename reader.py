@@ -7,6 +7,7 @@ from os import makedirs
 import re
 
 import line_filters
+from stats import meanstdv
 
 
 patterns = {
@@ -36,6 +37,19 @@ def filter(infile_name, filters, outfile_name):
     print("Included %s lines, excluded %s lines" % (included, excluded))
 
 
+def get_float_values(infile_name, field_name):
+    values = []
+    infile = csv.DictReader(open(infile_name, 'rU'))
+    for line in infile:
+        try:
+            value = float(line[field_name])
+        except:
+            pass
+        else:
+            values.append(value)
+    return values
+
+
 def filter_all_trt(dirname):
     """Filter all TRT csv files in `dirname`."""
     outdir = 'data/trt'
@@ -49,9 +63,16 @@ def filter_all_trt(dirname):
         trt_name = name.rsplit(".", 1)[0]
         outfile_name = "data/trt/%s-out.csv" % trt_name
         try:
+            # To do the std-dev filtering we have to do a first pass over the
+            # data first.
+            response_times = get_float_values(infile_name, 'response_time')
+            mean, stddev = meanstdv(response_times)
+            std_dev_filter = line_filters.exclude_std_dev(
+                mean, stddev, max_sigma=2.5)
             filter(infile_name,
                    [line_filters.exclude_wrong,
-                    line_filters.exclude_response_time_out_of_range],
+                    line_filters.exclude_response_time_out_of_range,
+                    std_dev_filter],
                    outfile_name)
         except Exception as e:
             print("Couldn't parse %s correctly." % infile_name)
