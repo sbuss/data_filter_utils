@@ -61,7 +61,7 @@ def filter_all_trt(dirname):
         print("Filtering %s" % infile_name)
         path, name = infile_name.rsplit("/", 1)
         trt_name = name.rsplit(".", 1)[0]
-        outfile_name = "data/trt/%s-out.csv" % trt_name
+        outfile_name = "data/trt/%s-filtered.csv" % trt_name
         try:
             # To do the std-dev filtering we have to do a first pass over the
             # data first.
