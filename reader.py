@@ -5,11 +5,6 @@ from os import path
 import re
 
 
-patterns = {
-    'trt': 'trt.*\.csv',
-}
-
-
 def files_in_dir(dirname, pattern):
     for (dirpath, dirnames, filenames) in walk(dirname):
         for filename in filenames:
