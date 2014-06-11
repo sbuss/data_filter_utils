@@ -17,13 +17,16 @@ def files_in_dir(dirname, pattern):
                 yield path.join(dirpath, filename)
 
 
-def filter_file(infile_name, filters, outfile_name):
+def filter_file(infile_name, filters, outfile_name, exclude_lines=0):
     reader = csv.DictReader(open(infile_name, 'rU'))
     writer = csv.DictWriter(open(outfile_name, 'w'), reader.fieldnames)
     writer.writeheader()
     included = 0
     excluded = 0
     for line in reader:
+        if excluded < exclude_lines:
+            excluded += 1
+            continue
         if any(fltr(line) for fltr in filters):
             excluded += 1
         else:
