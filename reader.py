@@ -18,6 +18,17 @@ def files_in_dir(dirname, pattern):
 
 
 def filter_file(infile_name, filters, outfile_name, exclude_lines=0):
+    """Filter infile by applying filters, and writing to outfile.
+
+    Args:
+        infile_name: The name/path to the input csv
+        filters: A list of callables to apply to each line of the file. If
+            any of the filters returns True, then the line is discarded.
+        outfile_name: The name/path of the file to write to
+        exclude_lines: The number of leading lines in the file to exclude.
+            This is useful for excluding the practice runs that occur at
+            the beginning of the file.
+    """
     reader = csv.DictReader(open(infile_name, 'rU'))
     writer = csv.DictWriter(open(outfile_name, 'w'), reader.fieldnames)
     writer.writeheader()
