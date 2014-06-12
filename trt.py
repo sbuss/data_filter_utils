@@ -15,6 +15,31 @@ from stats import meanstdv
 trt_filename_pattern = r'trt.*\.csv'
 
 
+class Summarizer(object):
+    def __init__(self, name, reader, group_field):
+        self.reader = reader
+        self.name = name
+        self.group_field = group_field
+        self.groups = {}
+        self._read_and_populate()
+
+    def _read_and_populate(self):
+        data = list(self.reader)
+        # Sort data by group_field
+        key_func = lambda d: d[self.group_field].lower()
+        sorted_data = sorted(data, key=key_func)
+        for key, group in groupby(sorted_data, key_func):
+            group_data = list(group)
+            self.groups[key] = {
+                'response_time': meanstdv(
+                    to_float([datum['response_time']
+                              for datum in group_data])),
+                'accuracy': meanstdv(
+                    to_float([datum['accuracy']
+                              for datum in group_data]))
+            }
+
+
 def summarize(dirname):
     print("Summarizing %s" % dirname)
     fieldnames = [
