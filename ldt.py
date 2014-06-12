@@ -35,6 +35,7 @@ def summarize_ldt(filename):
     reader = open(filename, 'rU')
     reader.readline()
     reader.readline()
+    # TODO: Choose a correc exclude_lines value
     reader = filtered_reader(
         csv.DictReader(reader),
         filters=[],
