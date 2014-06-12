@@ -12,6 +12,30 @@ def files_in_dir(dirname, pattern):
                 yield path.join(dirpath, filename)
 
 
+def filtered_reader(file_like, filters, exclude_lines=0):
+    """Read a file-like object, applying the given filters.
+
+    Args:
+        filters: A list of callables to apply to each line of the file. If
+            any of the filters returns True, then the line is discarded.
+        exclude_lines: The number of leading lines in the file to exclude.
+            This is useful for excluding the practice runs that occur at
+            the beginning of the file.
+    """
+    included = 0
+    excluded = 0
+    for line in file_like:
+        if excluded < exclude_lines:
+            excluded += 1
+            continue
+        if any(fltr(line) for fltr in filters):
+            excluded += 1
+        else:
+            yield line
+            included += 1
+    print("Included %s lines, excluded %s lines" % (included, excluded))
+
+
 def filter_file(infile_name, filters, outfile_name, exclude_lines=0):
     """Filter infile by applying filters, and writing to outfile.
 
@@ -27,18 +51,8 @@ def filter_file(infile_name, filters, outfile_name, exclude_lines=0):
     reader = csv.DictReader(open(infile_name, 'rU'))
     writer = csv.DictWriter(open(outfile_name, 'w'), reader.fieldnames)
     writer.writeheader()
-    included = 0
-    excluded = 0
-    for line in reader:
-        if excluded < exclude_lines:
-            excluded += 1
-            continue
-        if any(fltr(line) for fltr in filters):
-            excluded += 1
-        else:
-            writer.writerow(line)
-            included += 1
-    print("Included %s lines, excluded %s lines" % (included, excluded))
+    for line in filtered_reader(reader, filters, exclude_lines=exclude_lines):
+        writer.writerow(line)
 
 
 def get_float_values(infile_name, field_name):
