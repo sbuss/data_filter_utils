@@ -60,14 +60,10 @@ def _summarize(filename, name, filters, exclude_lines=0):
     summary = Summarizer(name, reader, 'class')
     data = OrderedDict()
     for (key, datum) in sorted(summary.groups.items(), key=lambda d: d[0]):
-        data['%s-response_time_avg' % key] = \
-            datum['response_time'].average
-        data['%s-response_time_std_dev' % key] = \
-            datum['response_time'].std_dev
-        data['%s-accuracy_avg' % key] = \
-            datum['accuracy'].average
-        data['%s-accuracy_std_dev' % key] = \
-            datum['accuracy'].std_dev
+        data['avg-rt-%s' % key] = datum['response_time'].average
+        data['sd-rt-%s' % key] = datum['response_time'].std_dev
+        data['avg-acc-%s' % key] = datum['accuracy'].average
+        data['sd-acc-%s' % key] = datum['accuracy'].std_dev
     return data
 
 
