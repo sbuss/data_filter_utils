@@ -10,6 +10,7 @@ simon_filename_pattern = r'si.*\.csv'
 
 
 def cog_incog_reader(reader):
+    """Annotate each line in a reader with congruent/incongruent"""
     for line in reader:
         cog_incog_line = deepcopy(line)
         cog_incog_line['congruent'] = 'incongruent'
