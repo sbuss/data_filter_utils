@@ -1,3 +1,8 @@
+from collections import namedtuple
+
+AvgAndStd = namedtuple('AvgAndStd', ['average', 'std_dev'])
+
+
 def meanstdv(x):
     """
     Calculate mean and standard deviation of data x[]:
@@ -14,4 +19,4 @@ def meanstdv(x):
     for a in x:
         std = std + (a - mean)**2
     std = sqrt(std / float(n-1))
-    return mean, std
+    return AvgAndStd(mean, std)
