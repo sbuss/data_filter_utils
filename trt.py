@@ -1,11 +1,10 @@
 import argparse
+from collections import OrderedDict
 import csv
 from itertools import groupby
-from os import makedirs
-import os
 
 import line_filters
-from reader import filter_file
+from reader import filtered_reader
 from reader import files_in_dir
 from reader import get_float_values
 from reader import to_float
@@ -29,77 +28,107 @@ class Summarizer(object):
         key_func = lambda d: d[self.group_field].lower()
         sorted_data = sorted(data, key=key_func)
         for key, group in groupby(sorted_data, key_func):
+            if not key:
+                continue
             group_data = list(group)
+            # Response time always excludes wrong answers, but accuracy doesnt
             self.groups[key] = {
                 'response_time': meanstdv(
                     to_float([datum['response_time']
-                              for datum in group_data])),
+                              for datum in filtered_reader(
+                                  group_data, [line_filters.exclude_wrong])])),
                 'accuracy': meanstdv(
                     to_float([datum['accuracy']
                               for datum in group_data]))
             }
+        self.groups['overall'] = {
+            'response_time': meanstdv(
+                to_float([datum['response_time']
+                          for datum in filtered_reader(
+                              data, [line_filters.exclude_wrong])])),
+            'accuracy': meanstdv(
+                to_float([datum['accuracy']
+                          for datum in data]))
+        }
 
 
-def summarize(dirname):
-    print("Summarizing %s" % dirname)
-    fieldnames = [
-        'trt_session', 'class',
-        'response_time_avg', 'response_time_std_dev',
-        'accuracy_avg', 'accuracy_std_dev']
-    outfile_name = os.path.join(dirname, "summary.csv")
-    writer = csv.DictWriter(open(outfile_name, 'w'), fieldnames)
-    writer.writeheader()
-
-    for infile_name in files_in_dir(dirname, trt_filename_pattern):
-        path, name = infile_name.rsplit("/", 1)
-        trt_session = name.rsplit(".", 1)[0]
-        reader = csv.DictReader(open(infile_name, 'rU'))
-        summary = Summarizer(infile_name, reader, 'class')
-        for (key, data) in sorted(summary.groups.items(), key=lambda d: d[0]):
-            writer.writerow(
-                {fieldnames[0]: trt_session,
-                 fieldnames[1]: key,
-                 fieldnames[2]: data['response_time'].average,
-                 fieldnames[3]: data['response_time'].std_dev,
-                 fieldnames[4]: data['accuracy'].average,
-                 fieldnames[5]: data['accuracy'].std_dev})
+def _summarize(filename, name, filters, exclude_lines=0):
+    reader = filtered_reader(
+        csv.DictReader(open(filename, 'rU')),
+        filters=filters,
+        exclude_lines=exclude_lines)
+    summary = Summarizer(name, reader, 'class')
+    data = OrderedDict()
+    for (key, datum) in sorted(summary.groups.items(), key=lambda d: d[0]):
+        data['%s-response_time_avg' % key] = \
+            datum['response_time'].average
+        data['%s-response_time_std_dev' % key] = \
+            datum['response_time'].std_dev
+        data['%s-accuracy_avg' % key] = \
+            datum['accuracy'].average
+        data['%s-accuracy_std_dev' % key] = \
+            datum['accuracy'].std_dev
+    return data
 
 
-def filter_all_trt(dirname):
-    """Filter all TRT csv files in `dirname`.
+def summarize_trt(filename):
+    """Filter and summarize a single TRT file four ways:
 
-    This loads all of the source csv files from OpenSesame, filters the
-    lines, and writes out the filtered files to `data/trt/%s-filtered.csv`,
-    where %s is the original filename.
+    * One pass include all
+    * One pass exclude outliers
+    * One pass exclude < 200, > 2000
+    * One pass exclude both
+    (Always exclude incorrect responses for RT calc)
     """
-    # Prepare the output
-    outdir = 'data/trt'
-    try:
-        makedirs(outdir)
-    except:
-        pass
+    path, name = filename.rsplit("/", 1)
+    trt_name = name.rsplit(".", 1)[0]
 
+    all_data = []
+
+    # Build the std-dev filter
+    response_times = get_float_values(filename, 'response_time')
+    mean, stddev = meanstdv(response_times)
+    std_dev_filter = line_filters.exclude_std_dev(
+        mean, stddev, max_sigma=2.5)
+
+    # Include all data
+    for name, filters in [
+            ('all', []),
+            ('exclude outliers', [std_dev_filter]),
+            ('exclude <200ms and >2000ms',
+             [line_filters.exclude_response_time_out_of_range]),
+            ('exclude both',
+             [std_dev_filter,
+              line_filters.exclude_response_time_out_of_range])]:
+        data = OrderedDict()
+        data['trt_session'] = "%s-%s" % (trt_name, name)
+        # Actually exclude the first *17* lines because there's a blank
+        # first line after the heading
+        summary_items = _summarize(
+            filename, name, filters, exclude_lines=17).items()
+        # I'm not sure if OrderedDict.update respects ordering, so...
+        for (key, d) in summary_items:
+            data[key] = d
+        all_data.append(data)
+    return all_data
+
+
+def summarize_all_trt(dirname):
+    outfile_name = 'trt-summary.csv'
+    writer = None
     for infile_name in files_in_dir(dirname, trt_filename_pattern):
-        print("Filtering %s" % infile_name)
-        path, name = infile_name.rsplit("/", 1)
-        trt_name = name.rsplit(".", 1)[0]
-        outfile_name = "data/trt/%s-filtered.csv" % trt_name
+        print("Processing %s" % infile_name)
         try:
-            # To do the std-dev filtering we have to do a first pass over the
-            # data first.
-            response_times = get_float_values(infile_name, 'response_time')
-            mean, stddev = meanstdv(response_times)
-            std_dev_filter = line_filters.exclude_std_dev(
-                mean, stddev, max_sigma=2.5)
-            filter_file(infile_name,
-                        [line_filters.exclude_wrong,
-                         line_filters.exclude_response_time_out_of_range,
-                         std_dev_filter],
-                        outfile_name)
+            data = summarize_trt(infile_name)
+            if writer is None:
+                fieldnames = data[0].keys()
+                writer = csv.DictWriter(open(outfile_name, 'w'), fieldnames)
+                writer.writeheader()
+            for datum in data:
+                writer.writerow(datum)
         except Exception as e:
             print("Couldn't parse %s correctly." % infile_name)
             print(e)
-    return outdir
 
 
 if __name__ == "__main__":
@@ -108,5 +137,4 @@ if __name__ == "__main__":
         "data_dir",
         help="The directory which contains all of your data files.")
     args = parser.parse_args()
-    outdir = filter_all_trt(args.data_dir)
-    summarize(outdir)
+    summarize_all_trt(args.data_dir)
