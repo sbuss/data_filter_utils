@@ -1,70 +1,14 @@
 import argparse
 from collections import OrderedDict
-import csv
-from itertools import groupby
 
 import line_filters
-from reader import filtered_reader
-from reader import files_in_dir
 from reader import get_float_values
-from reader import to_float
 from stats import meanstdv
+from summary import summarize_all
+from summary import summarize_file
 
 
 trt_filename_pattern = r'trt.*\.csv'
-
-
-class Summarizer(object):
-    def __init__(self, name, reader, group_field):
-        self.reader = reader
-        self.name = name
-        self.group_field = group_field
-        self.groups = {}
-        self._read_and_populate()
-
-    def _read_and_populate(self):
-        data = list(self.reader)
-        # Sort data by group_field
-        key_func = lambda d: d[self.group_field].lower()
-        sorted_data = sorted(data, key=key_func)
-        for key, group in groupby(sorted_data, key_func):
-            if not key:
-                continue
-            group_data = list(group)
-            # Response time always excludes wrong answers, but accuracy doesnt
-            self.groups[key] = {
-                'response_time': meanstdv(
-                    to_float([datum['response_time']
-                              for datum in filtered_reader(
-                                  group_data, [line_filters.exclude_wrong])])),
-                'accuracy': meanstdv(
-                    to_float([datum['accuracy']
-                              for datum in group_data]))
-            }
-        self.groups['overall'] = {
-            'response_time': meanstdv(
-                to_float([datum['response_time']
-                          for datum in filtered_reader(
-                              data, [line_filters.exclude_wrong])])),
-            'accuracy': meanstdv(
-                to_float([datum['accuracy']
-                          for datum in data]))
-        }
-
-
-def _summarize(filename, name, filters, exclude_lines=0):
-    reader = filtered_reader(
-        csv.DictReader(open(filename, 'rU')),
-        filters=filters,
-        exclude_lines=exclude_lines)
-    summary = Summarizer(name, reader, 'class')
-    data = OrderedDict()
-    for (key, datum) in sorted(summary.groups.items(), key=lambda d: d[0]):
-        data['avg-rt-%s' % key] = datum['response_time'].average
-        data['sd-rt-%s' % key] = datum['response_time'].std_dev
-        data['avg-acc-%s' % key] = datum['accuracy'].average
-        data['sd-acc-%s' % key] = datum['accuracy'].std_dev
-    return data
 
 
 def summarize_trt(filename):
@@ -100,7 +44,7 @@ def summarize_trt(filename):
         data['trt_session'] = "%s-%s" % (trt_name, name)
         # Actually exclude the first *17* lines because there's a blank
         # first line after the heading
-        summary_items = _summarize(
+        summary_items = summarize_file(
             filename, name, filters, exclude_lines=17).items()
         # I'm not sure if OrderedDict.update respects ordering, so...
         for (key, d) in summary_items:
@@ -111,20 +55,7 @@ def summarize_trt(filename):
 
 def summarize_all_trt(dirname):
     outfile_name = 'trt-summary.csv'
-    writer = None
-    for infile_name in files_in_dir(dirname, trt_filename_pattern):
-        print("Processing %s" % infile_name)
-        try:
-            data = summarize_trt(infile_name)
-            if writer is None:
-                fieldnames = data[0].keys()
-                writer = csv.DictWriter(open(outfile_name, 'w'), fieldnames)
-                writer.writeheader()
-            for datum in data:
-                writer.writerow(datum)
-        except Exception as e:
-            print("Couldn't parse %s correctly." % infile_name)
-            print(e)
+    summarize_all(dirname, trt_filename_pattern, outfile_name, summarize_trt)
 
 
 if __name__ == "__main__":
