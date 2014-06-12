@@ -49,12 +49,19 @@ def summarize(dirname):
 
 
 def filter_all_trt(dirname):
-    """Filter all TRT csv files in `dirname`."""
+    """Filter all TRT csv files in `dirname`.
+
+    This loads all of the source csv files from OpenSesame, filters the
+    lines, and writes out the filtered files to `data/trt/%s-filtered.csv`,
+    where %s is the original filename.
+    """
+    # Prepare the output
     outdir = 'data/trt'
     try:
         makedirs(outdir)
     except:
         pass
+
     for infile_name in files_in_dir(dirname, trt_filename_pattern):
         print("Filtering %s" % infile_name)
         path, name = infile_name.rsplit("/", 1)
