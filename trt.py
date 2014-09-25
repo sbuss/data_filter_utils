@@ -8,7 +8,7 @@ from summary import summarize_all
 from summary import summarize_file
 
 
-trt_filename_pattern = r'trt.*\.csv'
+trt_filename_pattern = r'.*TRT.*\.csv'
 
 
 def summarize_trt(filename):
