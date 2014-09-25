@@ -1,3 +1,39 @@
+"""
+Parse and summarize TRT result files.
+
+This looks at the TRT results in csv form. The important fields are
+
+* 'response_time' - the time it took the subject to answer
+* 'accuracy' - whether or not the answer was correct
+* 'class' - the type of distractor or control :
+    * splus - semantic distractor
+    * sminus - semantic control
+    * tplus - translation form distractor
+    * tminus - translation form control
+    * yes - correct translations
+
+To use this script point it at a directory containing your TRT results, named
+according to the trt_filename_pattern. For example:
+
+    data/
+    └── trt
+        ├── bilinguals
+        │   ├── 01_TRT_bilingual.csv
+        │   ├── 02_TRT_bilingual.csv
+        │   └── ...
+        └── immersion
+            ├── 01_TRT_immersion.csv
+            ├── 02_TRT_immersion.csv
+            └── ...
+
+Running the following will output a file `trt-summary.csv`:
+
+    python trt.py data/bilinguals
+
+The `trt-summary.csv` file summarizes the data by reporting the average and
+standard deviation response time and average and standard deviation of
+accuracy, both overall and for each `class` in the data.
+"""
 import argparse
 from collections import OrderedDict
 
