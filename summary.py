@@ -2,6 +2,8 @@ from collections import OrderedDict
 import csv
 from itertools import groupby
 
+from natsort import natsorted
+
 import line_filters
 from reader import files_in_dir
 from reader import filtered_reader
@@ -21,7 +23,7 @@ class Summarizer(object):
         data = list(self.reader)
         # Sort data by group_field
         key_func = lambda d: d[self.group_field].lower()
-        sorted_data = sorted(data, key=key_func)
+        sorted_data = natsorted(data, key=key_func)
         for key, group in groupby(sorted_data, key_func):
             if not key:
                 continue
@@ -50,7 +52,7 @@ class Summarizer(object):
 def summarize_reader(name, reader, group):
     data = OrderedDict()
     summary = Summarizer(name, reader, group)
-    for (key, datum) in sorted(summary.groups.items(), key=lambda d: d[0]):
+    for (key, datum) in natsorted(summary.groups.items(), key=lambda d: d[0]):
         data['AvgRT-%s' % key] = datum['response_time'].average
         data['SDRT-%s' % key] = datum['response_time'].std_dev
         data['AvgAcc-%s' % key] = datum['accuracy'].average
@@ -75,7 +77,7 @@ def summarize_all(dirname, file_name_pattern, outfile_name, summarize_method):
         try:
             data = summarize_method(infile_name)
             if writer is None:
-                fieldnames = sorted(data[0].keys())
+                fieldnames = natsorted(data[0].keys())
                 writer = csv.DictWriter(open(outfile_name, 'w'), fieldnames)
                 writer.writeheader()
             for datum in data:
