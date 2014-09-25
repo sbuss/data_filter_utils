@@ -6,7 +6,7 @@ from reader import filtered_reader
 from summary import summarize_all
 from summary import summarize_reader
 
-ldt_filename_pattern = r'ldt.*\.csv'
+ldt_filename_pattern = r'.*LDT.*\.csv'
 
 
 def word_nonword_reader(reader):
