@@ -40,7 +40,7 @@ def summarize_ldt(filename):
     Group data on congruent and incongruent
     """
     path, name = filename.rsplit("/", 1)
-    participant_name = name.rsplit(".", 1)[0]
+    participant_name = name.split("_", 1)[0]
 
     # ldt files are sometimes weird with two heading rows...
     with open(filename, 'rU') as f:
