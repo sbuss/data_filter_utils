@@ -57,7 +57,7 @@ def summarize_trt(filename):
     (Always exclude incorrect responses for RT calc)
     """
     path, name = filename.rsplit("/", 1)
-    trt_name = name.rsplit(".", 1)[0]
+    trt_name = name.split("_", 1)[0]
 
     all_data = []
 
