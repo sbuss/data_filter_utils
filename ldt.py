@@ -10,14 +10,25 @@ ldt_filename_pattern = r'.*LDT.*\.csv'
 
 
 def word_nonword_reader(reader):
-    """Annotate each line in a reader with congruent/incongruent"""
+    """Annotate each line in a reader with word/nonword.
+
+    In the bilingual files, this is set by the `isword` variable (1 is True),
+    in the immersion files, this is set by the filename of the image
+    displayed - if the filename starts with 'word', then it's a real word.
+    """
     for line in reader:
         word_nonword_line = deepcopy(line)
         word_nonword_line['word_or_nonword'] = ''
-        if line['image'].startswith('j'):
-            word_nonword_line['word_or_nonword'] = 'nonword'
-        elif line['image'].startswith('word'):
-            word_nonword_line['word_or_nonword'] = 'word'
+        if 'isword' in line:
+            if line['isword'] == '1':
+                word_nonword_line['word_or_nonword'] = 'word'
+            else:
+                word_nonword_line['word_or_nonword'] = 'nonword'
+        else:
+            if line['image'].startswith('j'):
+                word_nonword_line['word_or_nonword'] = 'nonword'
+            elif line['image'].startswith('word'):
+                word_nonword_line['word_or_nonword'] = 'word'
         yield word_nonword_line
 
 
