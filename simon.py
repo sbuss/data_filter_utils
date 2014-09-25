@@ -6,11 +6,14 @@ from reader import filtered_reader
 from summary import summarize_all
 from summary import summarize_reader
 
-simon_filename_pattern = r'si.*\.csv'
+simon_filename_pattern = r'.*SIMON.*\.csv'
 
 
 def cog_incog_reader(reader):
-    """Annotate each line in a reader with congruent/incongruent"""
+    """Annotate each line in a reader with congruent/incongruent
+
+    Note: The box in the middle of the screen is always considered congruent.
+    """
     for line in reader:
         cog_incog_line = deepcopy(line)
         cog_incog_line['congruent'] = 'incongruent'
@@ -30,12 +33,12 @@ def summarize_simon(filename):
     Group data on congruent and incongruent
     """
     path, name = filename.rsplit("/", 1)
-    simon_name = name.rsplit(".", 1)[0]
+    simon_name = name.split("_", 1)[0]
 
     reader = filtered_reader(
         csv.DictReader(open(filename, 'rU')),
         filters=[],
-        exclude_lines=25)
+        exclude_lines=24)
     data = summarize_reader(simon_name, cog_incog_reader(reader), 'congruent')
     data['participant'] = simon_name
     data['simon_score'] = data['AvgRT-incongruent'] - data['AvgRT-congruent']
