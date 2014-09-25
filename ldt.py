@@ -24,7 +24,7 @@ def word_nonword_reader(reader):
 def summarize_ldt(filename):
     """Filter and summarize ldt data.
 
-    Exclude the first XXX lines of practice
+    Exclude the first 16 lines of practice
     Do normal correct response filtering
     Group data on congruent and incongruent
     """
@@ -39,7 +39,7 @@ def summarize_ldt(filename):
     reader = filtered_reader(
         csv.DictReader(reader),
         filters=[],
-        exclude_lines=5)
+        exclude_lines=16)
     data = summarize_reader(
         participant_name, word_nonword_reader(reader), 'word_or_nonword')
     data['participant'] = participant_name

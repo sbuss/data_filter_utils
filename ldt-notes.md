@@ -1,6 +1,6 @@
 # Filtering
 
-Exclude practice (first XXX)
+Exclude practice (first 16)
 Just correct response filtering
 
 # Summarizing
