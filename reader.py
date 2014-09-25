@@ -4,12 +4,16 @@ from os import walk
 from os import path
 import re
 
+from natsort import natsorted
+
 
 def files_in_dir(dirname, pattern):
+    matched_files = []
     for (dirpath, dirnames, filenames) in walk(dirname):
         for filename in filenames:
             if re.match(pattern, filename):
-                yield path.join(dirpath, filename)
+                matched_files.append(path.join(dirpath, filename))
+    return natsorted(matched_files)
 
 
 def filtered_reader(file_like, filters, exclude_lines=0):
