@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Parse and summarize TRT result files.
 
