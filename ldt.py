@@ -42,11 +42,19 @@ def summarize_ldt(filename):
     path, name = filename.rsplit("/", 1)
     participant_name = name.rsplit(".", 1)[0]
 
-    # ldt files are all weird with two heading rows...
+    # ldt files are sometimes weird with two heading rows...
+    with open(filename, 'rU') as f:
+        num_lines = 0
+        for line in f:
+            num_lines += 1
     reader = open(filename, 'rU')
-    reader.readline()
-    reader.readline()
-    # TODO: Choose a correc exclude_lines value
+    expected_lines = (1 +   # header
+                      16 +  # practice
+                      60 +  # correct words
+                      60    # incorrect words
+                      )
+    for i in range(num_lines - expected_lines):
+        reader.readline()
     reader = filtered_reader(
         csv.DictReader(reader),
         filters=[],
