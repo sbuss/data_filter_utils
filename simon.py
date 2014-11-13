@@ -6,7 +6,7 @@ from reader import filtered_reader
 from summary import summarize_all
 from summary import summarize_reader
 
-simon_filename_pattern = r'.*SIMON.*\.csv'
+simon_filename_pattern = r'.*((?i)SIMON).*\.csv'
 
 
 def cog_incog_reader(reader):
