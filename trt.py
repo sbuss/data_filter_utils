@@ -66,7 +66,7 @@ def summarize_trt(filename):
     response_times = get_float_values(filename, 'response_time')
     mean, stddev = meanstdv(response_times)
     std_dev_filter = line_filters.exclude_std_dev(
-        mean, stddev, max_sigma=2.5)
+        mean, stddev, max_sigma=2.5, min_sigma=2.5)
 
     # Include all data
     for name, filters in [
