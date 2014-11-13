@@ -2,7 +2,10 @@ import argparse
 import csv
 from copy import deepcopy
 
+import line_filters
 from reader import filtered_reader
+from reader import get_float_values
+from stats import meanstdv
 from summary import summarize_all
 from summary import summarize_reader
 
@@ -35,9 +38,15 @@ def summarize_simon(filename):
     path, name = filename.rsplit("/", 1)
     simon_name = name.split("_", 1)[0]
 
+    # Build the std-dev filter
+    response_times = get_float_values(filename, 'response_time')
+    mean, stddev = meanstdv(response_times)
+    std_dev_filter = line_filters.exclude_std_dev(
+        mean, stddev, max_sigma=2.5, min_sigma=2.5)
+
     reader = filtered_reader(
         csv.DictReader(open(filename, 'rU')),
-        filters=[],
+        filters=[std_dev_filter],
         exclude_lines=24)
     data = summarize_reader(simon_name, cog_incog_reader(reader), 'congruent')
     data['participant'] = simon_name

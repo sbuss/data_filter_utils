@@ -2,7 +2,10 @@ import argparse
 import csv
 from copy import deepcopy
 
+import line_filters
 from reader import filtered_reader
+from reader import get_float_values
+from stats import meanstdv
 from summary import summarize_all
 from summary import summarize_reader
 
@@ -42,6 +45,12 @@ def summarize_ldt(filename):
     path, name = filename.rsplit("/", 1)
     participant_name = name.split("_", 1)[0]
 
+    # Build the std-dev filter
+    response_times = get_float_values(filename, 'response_time')
+    mean, stddev = meanstdv(response_times)
+    std_dev_filter = line_filters.exclude_std_dev(
+        mean, stddev, max_sigma=2.5, min_sigma=2.5)
+
     # ldt files are sometimes weird with two heading rows...
     with open(filename, 'rU') as f:
         num_lines = 0
@@ -57,7 +66,7 @@ def summarize_ldt(filename):
         reader.readline()
     reader = filtered_reader(
         csv.DictReader(reader),
-        filters=[],
+        filters=[std_dev_filter],
         exclude_lines=16)
     data = summarize_reader(
         participant_name, word_nonword_reader(reader), 'word_or_nonword')
