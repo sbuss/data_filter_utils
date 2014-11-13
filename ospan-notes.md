@@ -1,7 +1,7 @@
 # Filtering
 
-Exclude practice (the first 10)
-Just correct response filtering
+* Exclude practice (the first 10)
+* Just correct response filtering
 
 # Summarizing
 
