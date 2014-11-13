@@ -81,3 +81,21 @@ It builds a Summary object on the file by grouping the data by the given `key`
 and then calculating average and standard deviation for response time and 
 accuraccy. Note that it excludes incorrect responses when calculating
 response time values.
+
+# Excluding outliers
+
+Excluding outliers requires two passes over the data. In the `reader` you'll
+need to do something like this:
+
+```python
+# Get float values for everything named `response_time`
+response_times = get_float_values(filename, 'response_time')
+# Find the mean and standard deviation of the values
+mean, stddev = meanstdv(response_times)
+# Build the filter.
+std_dev_filter = line_filters.exclude_std_dev(
+    mean, stddev, max_sigma=2.5, min_sigma=2.5)
+```
+
+Then include this filter in the list of filters you pass to `filtered_reader`.
+See `simon.summarize_simon` for a real example.
