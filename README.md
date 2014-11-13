@@ -10,7 +10,30 @@ For all files in a directory (that match a filename pattern):
     Write the results to a file
 ```
 
-## Filtered Readers
+# Usage
+
+Given a directory with data like
+
+```
+    data/
+    └── trt
+        ├── bilinguals
+        │   ├── 01_TRT_bilingual.csv
+        │   ├── 02_TRT_bilingual.csv
+        │   └── ...
+        └── immersion
+            ├── 01_TRT_immersion.csv
+            ├── 02_TRT_immersion.csv
+            └── ...
+```
+
+Running the following will output a file `trt-summary.csv`:
+
+```sh
+    python trt.py data/trt/bilinguals
+```
+
+# Filtered Readers
 
 A `filtered_reader` is just a wrapper on top of file objects which discard
 lines if they satisfy one of the given `filters`. This is especially useful
@@ -48,7 +71,7 @@ filters = [
 data = summarize_file('data.csv', 'John Smith', filters)
 ```
 
-## Summarize Reader
+# Summarize Reader
 
 The `summarize_reader` takes a file-like object and calculates summary values
 on its data. It's really only useful with a `DictReader`-type object, since it
