@@ -29,7 +29,7 @@ according to the trt_filename_pattern. For example:
 
 Running the following will output a file `trt-summary.csv`:
 
-    python trt.py data/bilinguals
+    python trt.py data/trt/bilinguals
 
 The `trt-summary.csv` file summarizes the data by reporting the average and
 standard deviation response time and average and standard deviation of
