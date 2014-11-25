@@ -37,10 +37,10 @@ accuracy, both overall and for each `class` in the data.
 """
 import argparse
 from collections import OrderedDict
+from functools import partial
 
 import line_filters
-from reader import get_float_values
-from stats import meanstdv
+from line_filters import get_dir_mean_std_filter
 from summary import summarize_all
 from summary import summarize_file
 
@@ -48,7 +48,7 @@ from summary import summarize_file
 trt_filename_pattern = r'.*TRT.*\.csv'
 
 
-def summarize_trt(filename):
+def summarize_trt(filename, std_dev_filter=None):
     """Filter and summarize a single TRT file four ways:
 
     * One pass include all
@@ -61,12 +61,6 @@ def summarize_trt(filename):
     trt_name = name.split("_", 1)[0]
 
     all_data = []
-
-    # Build the std-dev filter
-    response_times = get_float_values(filename, 'response_time')
-    mean, stddev = meanstdv(response_times)
-    std_dev_filter = line_filters.exclude_std_dev(
-        mean, stddev, max_sigma=2.5, min_sigma=2.5)
 
     # Include all data
     for name, filters in [
@@ -92,7 +86,10 @@ def summarize_trt(filename):
 
 def summarize_all_trt(dirname):
     outfile_name = 'trt-summary.csv'
-    summarize_all(dirname, trt_filename_pattern, outfile_name, summarize_trt)
+    std_dev_filter = get_dir_mean_std_filter(
+        dirname, trt_filename_pattern, min_sigma=2.5, max_sigma=2.5)
+    summarize_fn = partial(summarize_trt, std_dev_filter=std_dev_filter)
+    summarize_all(dirname, trt_filename_pattern, outfile_name, summarize_fn)
 
 
 if __name__ == "__main__":

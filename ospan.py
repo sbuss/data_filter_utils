@@ -1,10 +1,9 @@
 import argparse
 import csv
+from functools import partial
 
-import line_filters
+from line_filters import get_dir_mean_std_filter
 from reader import filtered_reader
-from reader import get_float_values
-from stats import meanstdv
 from summary import summarize_all
 from summary import summarize_reader
 
@@ -12,7 +11,7 @@ from summary import summarize_reader
 ospan_filename_pattern = r'.*OSPAN.*\.csv'
 
 
-def summarize_ospan(filename):
+def summarize_ospan(filename, std_dev_filter=None):
     """Filter and summarize ospan data.
 
     Exclude the first 10 lines of practice.
@@ -22,15 +21,13 @@ def summarize_ospan(filename):
     path, name = filename.rsplit("/", 1)
     ospan_name = name.split("_", 1)[0]
 
-    # Build the std-dev filter
-    response_times = get_float_values(filename, 'response_time')
-    mean, stddev = meanstdv(response_times)
-    std_dev_filter = line_filters.exclude_std_dev(
-        mean, stddev, max_sigma=2.5, min_sigma=2.5)
-
+    if std_dev_filter:
+        filters = [std_dev_filter]
+    else:
+        filters = []
     reader = filtered_reader(
         csv.DictReader(open(filename, 'rU')),
-        filters=[std_dev_filter],
+        filters=filters,
         exclude_lines=24)
     data = summarize_reader(ospan_name, reader, 'use_correct')
     data['participant'] = ospan_name
@@ -39,8 +36,11 @@ def summarize_ospan(filename):
 
 def summarize_all_ospan(dirname):
     outfile_name = 'ospan-summary.csv'
+    std_dev_filter = get_dir_mean_std_filter(
+        dirname, ospan_filename_pattern, min_sigma=2.5, max_sigma=2.5)
+    summarize_fn = partial(summarize_ospan, std_dev_filter=std_dev_filter)
     summarize_all(
-        dirname, ospan_filename_pattern, outfile_name, summarize_ospan)
+        dirname, ospan_filename_pattern, outfile_name, summarize_fn)
 
 
 if __name__ == "__main__":

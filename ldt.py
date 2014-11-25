@@ -1,11 +1,10 @@
 import argparse
 import csv
 from copy import deepcopy
+from functools import partial
 
-import line_filters
+from line_filters import get_dir_mean_std_filter
 from reader import filtered_reader
-from reader import get_float_values
-from stats import meanstdv
 from summary import summarize_all
 from summary import summarize_reader
 
@@ -35,7 +34,7 @@ def word_nonword_reader(reader):
         yield word_nonword_line
 
 
-def summarize_ldt(filename):
+def summarize_ldt(filename, std_dev_filter=None):
     """Filter and summarize ldt data.
 
     Exclude the first 16 lines of practice
@@ -44,12 +43,6 @@ def summarize_ldt(filename):
     """
     path, name = filename.rsplit("/", 1)
     participant_name = name.split("_", 1)[0]
-
-    # Build the std-dev filter
-    response_times = get_float_values(filename, 'response_time')
-    mean, stddev = meanstdv(response_times)
-    std_dev_filter = line_filters.exclude_std_dev(
-        mean, stddev, max_sigma=2.5, min_sigma=2.5)
 
     # ldt files are sometimes weird with two heading rows...
     with open(filename, 'rU') as f:
@@ -64,9 +57,13 @@ def summarize_ldt(filename):
                       )
     for i in range(num_lines - expected_lines):
         reader.readline()
+    if std_dev_filter:
+        filters = [std_dev_filter]
+    else:
+        filters = []
     reader = filtered_reader(
         csv.DictReader(reader),
-        filters=[std_dev_filter],
+        filters=filters,
         exclude_lines=16)
     data = summarize_reader(
         participant_name, word_nonword_reader(reader), 'word_or_nonword')
@@ -76,8 +73,11 @@ def summarize_ldt(filename):
 
 def summarize_all_ldt(dirname):
     outfile_name = 'ldt-summary.csv'
+    std_dev_filter = get_dir_mean_std_filter(
+        dirname, ldt_filename_pattern, min_sigma=2.5, max_sigma=2.5)
+    summarize_fn = partial(summarize_ldt, std_dev_filter=std_dev_filter)
     summarize_all(
-        dirname, ldt_filename_pattern, outfile_name, summarize_ldt)
+        dirname, ldt_filename_pattern, outfile_name, summarize_fn)
 
 
 if __name__ == "__main__":
