@@ -48,7 +48,7 @@ from summary import summarize_file
 trt_filename_pattern = r'.*TRT.*\.csv'
 
 
-def summarize_trt(filename, std_dev_filter=None):
+def summarize_trt(filename, std_dev_filter):
     """Filter and summarize a single TRT file four ways:
 
     * One pass include all
