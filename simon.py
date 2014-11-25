@@ -1,11 +1,10 @@
 import argparse
 import csv
 from copy import deepcopy
+from functools import partial
 
-import line_filters
+from line_filters import get_dir_mean_std_filter
 from reader import filtered_reader
-from reader import get_float_values
-from stats import meanstdv
 from summary import summarize_all
 from summary import summarize_reader
 
@@ -29,25 +28,20 @@ def cog_incog_reader(reader):
         yield cog_incog_line
 
 
-def summarize_simon(filename):
+def summarize_simon(filename, filters=None):
     """Filter and summarize simon data.
 
     Exclude the first 24 lines of practice
     Do normal correct response filtering
     Group data on congruent and incongruent
     """
+    filters = filters or []
     path, name = filename.rsplit("/", 1)
     simon_name = name.split("_", 1)[0]
 
-    # Build the std-dev filter
-    response_times = get_float_values(filename, 'response_time')
-    mean, stddev = meanstdv(response_times)
-    std_dev_filter = line_filters.exclude_std_dev(
-        mean, stddev, max_sigma=2.5, min_sigma=2.5)
-
     reader = filtered_reader(
         csv.DictReader(open(filename, 'rU')),
-        filters=[center_filter, std_dev_filter],
+        filters=[center_filter] + filters,
         exclude_lines=24)
     data = summarize_reader(simon_name, cog_incog_reader(reader), 'congruent')
     data['participant'] = simon_name
@@ -57,8 +51,11 @@ def summarize_simon(filename):
 
 def summarize_all_simon(dirname):
     outfile_name = 'simon-summary.csv'
+    std_dev_filter = get_dir_mean_std_filter(
+        dirname, simon_filename_pattern, min_sigma=2.5, max_sigma=2.5)
+    summarize_fn = partial(summarize_simon, filters=[std_dev_filter])
     summarize_all(
-        dirname, simon_filename_pattern, outfile_name, summarize_simon)
+        dirname, simon_filename_pattern, outfile_name, summarize_fn)
 
 
 if __name__ == "__main__":

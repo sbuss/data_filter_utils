@@ -1,3 +1,8 @@
+from reader import files_in_dir
+from reader import get_float_values
+from stats import meanstdv
+
+
 exclude_wrong = lambda line: line['accuracy'] == '0'
 exclude_response_time_out_of_range = lambda line: (
     line['response_time'] == 'NA' or
@@ -39,3 +44,15 @@ def exclude_std_dev(mean, sigma, min_sigma=None, max_sigma=None):
             return True
 
     return filter_line
+
+
+def get_dir_mean_std_filter(dirname, file_name_pattern, field='response_time',
+                            min_sigma=2.5, max_sigma=2.5):
+    response_times = []
+    for infile_name in files_in_dir(dirname, file_name_pattern):
+        print("Mean-Std filter reading %s" % infile_name)
+        response_times.extend(get_float_values(infile_name, field))
+    mean, stddev = meanstdv(response_times)
+    print("Built std-dev filter u=%s, s=%s" % (mean, stddev))
+    return exclude_std_dev(
+        mean, stddev, max_sigma=2.5, min_sigma=2.5)
