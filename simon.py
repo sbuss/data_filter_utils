@@ -11,6 +11,8 @@ from summary import summarize_reader
 
 simon_filename_pattern = r'.*((?i)SIMON).*\.csv'
 
+center_filter = lambda line: line['alignment'] == 'center'
+
 
 def cog_incog_reader(reader):
     """Annotate each line in a reader with congruent/incongruent
@@ -20,10 +22,9 @@ def cog_incog_reader(reader):
     for line in reader:
         cog_incog_line = deepcopy(line)
         cog_incog_line['congruent'] = 'incongruent'
-        if ((line['box_img'] == 'redsquare.bmp' and
-                line['alignment'] in ['left', 'center']) or
-                (line['box_img'] == 'bluesquare.bmp' and
-                    line['alignment'] in ['right', 'center'])):
+        (color, alignment) = (line['box_img'], line['alignment'])
+        if ((color == 'redsquare.bmp' and alignment == 'left') or
+                (color == 'bluesquare.bmp' and 'alignment' == 'right')):
             cog_incog_line['congruent'] = 'congruent'
         yield cog_incog_line
 
@@ -46,7 +47,7 @@ def summarize_simon(filename):
 
     reader = filtered_reader(
         csv.DictReader(open(filename, 'rU')),
-        filters=[std_dev_filter],
+        filters=[center_filter, std_dev_filter],
         exclude_lines=24)
     data = summarize_reader(simon_name, cog_incog_reader(reader), 'congruent')
     data['participant'] = simon_name
