@@ -87,7 +87,8 @@ def summarize_trt(filename, std_dev_filter):
 def summarize_all_trt(dirname):
     outfile_name = 'trt-summary.csv'
     std_dev_filter = get_dir_mean_std_filter(
-        dirname, trt_filename_pattern, min_sigma=2.5, max_sigma=2.5)
+        dirname, trt_filename_pattern, min_sigma=2.5, max_sigma=2.5,
+        exclude_lines=17)
     summarize_fn = partial(summarize_trt, std_dev_filter=std_dev_filter)
     summarize_all(dirname, trt_filename_pattern, outfile_name, summarize_fn)
 

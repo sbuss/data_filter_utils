@@ -74,7 +74,8 @@ def summarize_ldt(filename, std_dev_filter=None):
 def summarize_all_ldt(dirname):
     outfile_name = 'ldt-summary.csv'
     std_dev_filter = get_dir_mean_std_filter(
-        dirname, ldt_filename_pattern, min_sigma=2.5, max_sigma=2.5)
+        dirname, ldt_filename_pattern, min_sigma=2.5, max_sigma=2.5,
+        exclude_lines=16)
     summarize_fn = partial(summarize_ldt, std_dev_filter=std_dev_filter)
     summarize_all(
         dirname, ldt_filename_pattern, outfile_name, summarize_fn)

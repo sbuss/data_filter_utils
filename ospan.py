@@ -37,7 +37,8 @@ def summarize_ospan(filename, std_dev_filter=None):
 def summarize_all_ospan(dirname):
     outfile_name = 'ospan-summary.csv'
     std_dev_filter = get_dir_mean_std_filter(
-        dirname, ospan_filename_pattern, min_sigma=2.5, max_sigma=2.5)
+        dirname, ospan_filename_pattern, min_sigma=2.5, max_sigma=2.5,
+        exclude_lines=24)
     summarize_fn = partial(summarize_ospan, std_dev_filter=std_dev_filter)
     summarize_all(
         dirname, ospan_filename_pattern, outfile_name, summarize_fn)
