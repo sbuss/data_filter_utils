@@ -54,9 +54,8 @@ def summarize_reader(name, reader, group):
     summary = Summarizer(name, reader, group)
     for (key, datum) in natsorted(summary.groups.items(), key=lambda d: d[0]):
         data['AvgRT-%s' % key] = datum['response_time'].average
-        data['SDRT-%s' % key] = datum['response_time'].std_dev
+        #data['SDRT-%s' % key] = datum['response_time'].std_dev
         data['AvgAcc-%s' % key] = datum['accuracy'].average
-        data['SDAcc-%s' % key] = datum['accuracy'].std_dev
     return data
 
 
