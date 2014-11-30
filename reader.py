@@ -26,18 +26,20 @@ def filtered_reader(file_like, filters, exclude_lines=0):
             This is useful for excluding the practice runs that occur at
             the beginning of the file.
     """
+    skipped = 0
     included = 0
     excluded = 0
     for line in file_like:
-        if excluded < exclude_lines:
-            excluded += 1
+        if skipped < exclude_lines:
+            skipped += 1
             continue
         if any(fltr(line) for fltr in filters):
             excluded += 1
         else:
             yield line
             included += 1
-    print("Included %s lines, excluded %s lines" % (included, excluded))
+    print("Included %s lines, skipped %s lines, excluded %s lines" % (
+        included, skipped, excluded))
 
 
 def filter_file(infile_name, filters, outfile_name, exclude_lines=0):
