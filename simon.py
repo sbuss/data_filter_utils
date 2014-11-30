@@ -23,7 +23,7 @@ def cog_incog_reader(reader):
         cog_incog_line['congruent'] = 'incongruent'
         (color, alignment) = (line['box_img'], line['alignment'])
         if ((color == 'redsquare.bmp' and alignment == 'left') or
-                (color == 'bluesquare.bmp' and 'alignment' == 'right')):
+                (color == 'bluesquare.bmp' and alignment == 'right')):
             cog_incog_line['congruent'] = 'congruent'
         yield cog_incog_line
 
