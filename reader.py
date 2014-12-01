@@ -61,10 +61,12 @@ def filter_file(infile_name, filters, outfile_name, exclude_lines=0):
         writer.writerow(line)
 
 
-def get_float_values(infile_name, field_name, exclude_lines=0):
+def get_float_values(infile_name, field_name, exclude_lines=0, filters=None):
+    filters = filters or []
     infile = csv.DictReader(open(infile_name, 'rU'))
     return to_float(line[field_name]
-                    for line in filtered_reader(infile, [], exclude_lines))
+                    for line in filtered_reader(
+                        infile, filters, exclude_lines))
 
 
 def to_float(iterable):

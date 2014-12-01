@@ -55,7 +55,7 @@ def summarize_all_simon(dirname):
     outfile_name = 'simon-summary.csv'
     std_dev_filter = get_dir_mean_std_filter(
         dirname, simon_filename_pattern, min_sigma=2.5, max_sigma=2.5,
-        exclude_lines=24)
+        exclude_lines=24, filters=[center_filter])
     summarize_fn = partial(summarize_simon, std_dev_filter=std_dev_filter)
     summarize_all(
         dirname, simon_filename_pattern, outfile_name, summarize_fn)

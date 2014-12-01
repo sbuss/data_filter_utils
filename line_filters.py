@@ -48,12 +48,14 @@ def exclude_std_dev(mean, sigma, min_sigma=None, max_sigma=None):
 
 def get_dir_mean_std_filter(dirname, file_name_pattern, exclude_lines=0,
                             field='response_time',
-                            min_sigma=2.5, max_sigma=2.5):
+                            min_sigma=2.5, max_sigma=2.5,
+                            filters=None):
+    filters = filters or []
     response_times = []
     for infile_name in files_in_dir(dirname, file_name_pattern):
         print("Mean-Std filter reading %s" % infile_name)
         response_times.extend(
-            get_float_values(infile_name, field, exclude_lines))
+            get_float_values(infile_name, field, exclude_lines, filters))
     mean, stddev = meanstdv(response_times)
     print("Built std-dev filter u=%s, s=%s" % (mean, stddev))
     return exclude_std_dev(
