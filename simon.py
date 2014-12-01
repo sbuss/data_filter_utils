@@ -27,6 +27,8 @@ def cog_incog_reader(reader):
         if ((color == 'redsquare.bmp' and alignment == 'left') or
                 (color == 'bluesquare.bmp' and alignment == 'right')):
             cog_incog_line['congruent'] = 'congruent'
+        elif alignment == 'center':
+            cog_incog_line['congruent'] = 'center'
         yield cog_incog_line
 
 
